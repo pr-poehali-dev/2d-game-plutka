@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,12 +11,42 @@ import Icon from '@/components/ui/icon';
 
 type Screen = 'menu' | 'game' | 'profile' | 'shop' | 'multi';
 
+const STORAGE_KEY = '2dplutka_save';
+
+interface SaveData {
+  currentLevel: number;
+  selectedWeaponId: string;
+  stats: GameStats;
+  unlockedWeapons: string[];
+}
+
+const loadGame = (): SaveData | null => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveGame = (data: SaveData) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Failed to save game:', e);
+  }
+};
+
 const Index = () => {
+  const savedData = loadGame();
+  
   const [screen, setScreen] = useState<Screen>('menu');
-  const [currentLevel, setCurrentLevel] = useState(1);
-  const [selectedWeapon, setSelectedWeapon] = useState<Weapon>(weapons[0]);
+  const [currentLevel, setCurrentLevel] = useState(savedData?.currentLevel || 1);
+  const [selectedWeapon, setSelectedWeapon] = useState<Weapon>(
+    weapons.find(w => w.id === savedData?.selectedWeaponId) || weapons[0]
+  );
   const [gameMode, setGameMode] = useState<'single' | 'multi'>('single');
-  const [stats, setStats] = useState<GameStats>({
+  const [stats, setStats] = useState<GameStats>(savedData?.stats || {
     wins: 0,
     losses: 0,
     totalKills: 0,
@@ -25,7 +55,19 @@ const Index = () => {
     coins: 500,
   });
 
-  const [unlockedWeapons, setUnlockedWeapons] = useState<string[]>(['basic']);
+  const [unlockedWeapons, setUnlockedWeapons] = useState<string[]>(
+    savedData?.unlockedWeapons || ['basic']
+  );
+
+  useEffect(() => {
+    const dataToSave: SaveData = {
+      currentLevel,
+      selectedWeaponId: selectedWeapon.id,
+      stats,
+      unlockedWeapons,
+    };
+    saveGame(dataToSave);
+  }, [currentLevel, selectedWeapon, stats, unlockedWeapons]);
 
   const handleGameEnd = (won: boolean, kills: number, shots: number) => {
     const levelData = levels.find((l) => l.id === currentLevel);
@@ -299,7 +341,7 @@ const Index = () => {
           </div>
 
           <div className="mt-8 p-6 bg-slate-800 rounded-lg border border-yellow-500/30">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Icon name="Coins" className="text-yellow-500" size={40} />
                 <div>
@@ -309,13 +351,28 @@ const Index = () => {
                   </div>
                 </div>
               </div>
-              <Button
-                onClick={() => setScreen('shop')}
-                className="bg-gradient-to-r from-yellow-600 to-orange-600"
-              >
-                <Icon name="ShoppingCart" className="mr-2" />
-                Visit Arsenal
-              </Button>
+              <div className="flex gap-2 w-full md:w-auto">
+                <Button
+                  onClick={() => setScreen('shop')}
+                  className="bg-gradient-to-r from-yellow-600 to-orange-600 flex-1 md:flex-none"
+                >
+                  <Icon name="ShoppingCart" className="mr-2" />
+                  Visit Arsenal
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (confirm('Сбросить весь прогресс? Это действие необратимо!')) {
+                      localStorage.removeItem(STORAGE_KEY);
+                      window.location.reload();
+                    }
+                  }}
+                  variant="outline"
+                  className="border-red-500 text-red-500 hover:bg-red-500/10"
+                >
+                  <Icon name="RotateCcw" className="mr-2" />
+                  <span className="hidden md:inline">Reset</span>
+                </Button>
+              </div>
             </div>
           </div>
         </Card>
