@@ -13,6 +13,7 @@ export const GameCanvas = ({ level, weapon, onGameEnd, mode }: GameCanvasProps) 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameOver, setGameOver] = useState(false);
   const animationRef = useRef<number>();
+  const audioContextRef = useRef<AudioContext | null>(null);
   const gameStateRef = useRef({
     players: [] as Player[],
     playerBase: null as Base | null,
@@ -30,25 +31,40 @@ export const GameCanvas = ({ level, weapon, onGameEnd, mode }: GameCanvasProps) 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = 800;
-    canvas.height = 600;
+    const updateCanvasSize = () => {
+      const isMobile = window.innerWidth < 768;
+      canvas.width = isMobile ? Math.min(window.innerWidth - 32, 600) : 800;
+      canvas.height = isMobile ? Math.min(window.innerHeight - 200, 500) : 600;
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
 
     const state = gameStateRef.current;
 
     state.playerBase = {
       id: 'player-base',
       x: 50,
-      y: 300,
+      y: canvas.height / 2,
       health: 500,
       maxHealth: 500,
       team: 'player',
       size: 30,
     };
 
+    const getEnemyBaseX = () => {
+      const isMobile = window.innerWidth < 768;
+      return isMobile ? canvas.width - 50 : 750;
+    };
+
     state.enemyBase = {
       id: 'enemy-base',
-      x: 750,
-      y: 300,
+      x: getEnemyBaseX(),
+      y: canvas.height / 2,
       health: level.baseHealth,
       maxHealth: level.baseHealth,
       team: 'enemy',
@@ -58,8 +74,8 @@ export const GameCanvas = ({ level, weapon, onGameEnd, mode }: GameCanvasProps) 
     for (let i = 0; i < level.enemyCount; i++) {
       state.players.push({
         id: `enemy-${i}`,
-        x: 600 + Math.random() * 150,
-        y: Math.random() * 600,
+        x: canvas.width * 0.6 + Math.random() * (canvas.width * 0.3),
+        y: Math.random() * canvas.height,
         health: 30,
         maxHealth: 30,
         team: 'enemy',
@@ -67,10 +83,47 @@ export const GameCanvas = ({ level, weapon, onGameEnd, mode }: GameCanvasProps) 
       });
     }
 
-    const handleClick = (e: MouseEvent) => {
+    const playShootSound = () => {
+      if (!audioContextRef.current) return;
+      const ctx = audioContextRef.current;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'square';
+      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.1);
+    };
+
+    const playExplosionSound = () => {
+      if (!audioContextRef.current) return;
+      const ctx = audioContextRef.current;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      oscillator.frequency.setValueAtTime(200, ctx.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.2);
+      oscillator.type = 'sawtooth';
+      gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+      
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.2);
+    };
+
+    const handleInteraction = (clientX: number, clientY: number) => {
       const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
       const now = Date.now();
 
       if (now - state.lastShot < weapon.fireRate) return;
@@ -87,11 +140,24 @@ export const GameCanvas = ({ level, weapon, onGameEnd, mode }: GameCanvasProps) 
         size: 4,
       });
 
+      playShootSound();
       state.lastShot = now;
       state.shots++;
     };
 
+    const handleClick = (e: MouseEvent) => {
+      handleInteraction(e.clientX, e.clientY);
+    };
+
+    const handleTouch = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        handleInteraction(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+
     canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('touchstart', handleTouch);
 
     const gameLoop = () => {
       if (!ctx || !canvas || gameOver) return;
@@ -131,6 +197,7 @@ export const GameCanvas = ({ level, weapon, onGameEnd, mode }: GameCanvasProps) 
             player.health -= bullet.damage;
             if (player.health <= 0) {
               state.kills++;
+              playExplosionSound();
             }
             return false;
           }
@@ -143,6 +210,9 @@ export const GameCanvas = ({ level, weapon, onGameEnd, mode }: GameCanvasProps) 
 
           if (distance < state.enemyBase.size + bullet.size) {
             state.enemyBase.health -= bullet.damage;
+            if (state.enemyBase.health <= 0) {
+              playExplosionSound();
+            }
             return false;
           }
         }
@@ -241,20 +311,21 @@ export const GameCanvas = ({ level, weapon, onGameEnd, mode }: GameCanvasProps) 
         ctx.arc(state.enemyBase.x, state.enemyBase.y, state.enemyBase.size, 0, Math.PI * 2);
         ctx.fill();
 
+        const barX = canvas.width - 210;
         ctx.fillStyle = '#FF006E';
-        ctx.fillRect(590, 10, 200, 20);
+        ctx.fillRect(barX, 10, 200, 20);
         ctx.fillStyle = '#FF4444';
         ctx.fillRect(
-          590,
+          barX,
           10,
           (state.enemyBase.health / state.enemyBase.maxHealth) * 200,
           20
         );
         ctx.strokeStyle = '#FFFFFF';
-        ctx.strokeRect(590, 10, 200, 20);
+        ctx.strokeRect(barX, 10, 200, 20);
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '12px Orbitron';
-        ctx.fillText(`ENEMY BASE: ${Math.max(0, state.enemyBase.health)}`, 595, 25);
+        ctx.fillText(`ENEMY BASE: ${Math.max(0, state.enemyBase.health)}`, barX + 5, 25);
       }
 
       state.players.forEach((player) => {
@@ -308,7 +379,9 @@ export const GameCanvas = ({ level, weapon, onGameEnd, mode }: GameCanvasProps) 
     gameLoop();
 
     return () => {
+      window.removeEventListener('resize', updateCanvasSize);
       canvas.removeEventListener('click', handleClick);
+      canvas.removeEventListener('touchstart', handleTouch);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }

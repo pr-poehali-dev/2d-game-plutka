@@ -56,7 +56,7 @@ const Index = () => {
   };
 
   const renderMenu = () => (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 relative overflow-hidden bg-[#0A0E27]">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden bg-[#0A0E27]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(155,135,245,0.1),transparent_50%)]" />
       <div className="absolute inset-0">
         {[...Array(50)].map((_, i) => (
@@ -75,27 +75,28 @@ const Index = () => {
         ))}
       </div>
 
-      <div className="relative z-10 text-center space-y-8 max-w-2xl">
+      <div className="relative z-10 text-center space-y-6 md:space-y-8 max-w-2xl w-full px-4">
         <h1 
-          className="text-8xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-600 animate-fade-in font-orbitron"
+          className="text-5xl md:text-8xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-600 animate-fade-in font-orbitron"
         >
           2DPlutka
         </h1>
         
-        <p className="text-cyan-300 text-xl font-orbitron">
+        <p className="text-cyan-300 text-lg md:text-xl font-orbitron">
           Cosmic Battle Arena
         </p>
 
-        <div className="grid grid-cols-2 gap-4 mt-12">
+        <div className="grid grid-cols-2 gap-3 md:gap-4 mt-8 md:mt-12">
           <Button
             onClick={() => {
               setGameMode('single');
               setScreen('game');
             }}
-            className="h-16 text-lg font-bold bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-[0_0_20px_rgba(0,217,255,0.5)] font-orbitron"
+            className="h-12 md:h-16 text-sm md:text-lg font-bold bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-[0_0_20px_rgba(0,217,255,0.5)] font-orbitron"
           >
-            <Icon name="Zap" className="mr-2" />
-            Campaign Mode
+            <Icon name="Zap" className="mr-1 md:mr-2" size={18} />
+            <span className="hidden md:inline">Campaign Mode</span>
+            <span className="md:hidden">Campaign</span>
           </Button>
 
           <Button
@@ -103,25 +104,25 @@ const Index = () => {
               setGameMode('multi');
               setScreen('multi');
             }}
-            className="h-16 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-[0_0_20px_rgba(155,135,245,0.5)] font-orbitron"
+            className="h-12 md:h-16 text-sm md:text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-[0_0_20px_rgba(155,135,245,0.5)] font-orbitron"
           >
-            <Icon name="Users" className="mr-2" />
+            <Icon name="Users" className="mr-1 md:mr-2" size={18} />
             Multiplayer
           </Button>
 
           <Button
             onClick={() => setScreen('profile')}
-            className="h-16 text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 font-orbitron"
+            className="h-12 md:h-16 text-sm md:text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 font-orbitron"
           >
-            <Icon name="User" className="mr-2" />
+            <Icon name="User" className="mr-1 md:mr-2" size={18} />
             Profile
           </Button>
 
           <Button
             onClick={() => setScreen('shop')}
-            className="h-16 text-lg font-bold bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 font-orbitron"
+            className="h-12 md:h-16 text-sm md:text-lg font-bold bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 font-orbitron"
           >
-            <Icon name="ShoppingCart" className="mr-2" />
+            <Icon name="ShoppingCart" className="mr-1 md:mr-2" size={18} />
             Arsenal
           </Button>
         </div>
@@ -157,7 +158,7 @@ const Index = () => {
     const levelData = levels.find((l) => l.id === currentLevel) || levels[0];
 
     return (
-      <div className="min-h-screen p-8 flex flex-col items-center justify-center gap-6 bg-[#0A0E27]">
+      <div className="min-h-screen p-4 md:p-8 flex flex-col items-center justify-center gap-4 md:gap-6 bg-[#0A0E27]">
         <div className="flex items-center justify-between w-full max-w-4xl">
           <Button
             onClick={() => setScreen('menu')}
@@ -185,37 +186,37 @@ const Index = () => {
           mode={gameMode}
         />
 
-        <div className="grid grid-cols-3 gap-4 w-full max-w-4xl">
-          <Card className="p-4 bg-slate-900/80 border-cyan-500/30">
-            <div className="flex items-center gap-2">
-              <Icon name="Target" className="text-cyan-500" />
+        <div className="grid grid-cols-3 gap-2 md:gap-4 w-full max-w-4xl">
+          <Card className="p-2 md:p-4 bg-slate-900/80 border-cyan-500/30">
+            <div className="flex items-center gap-1 md:gap-2">
+              <Icon name="Target" className="text-cyan-500" size={16} />
               <div>
-                <div className="text-sm text-gray-400">Enemies</div>
-                <div className="text-xl font-bold font-orbitron">
+                <div className="text-xs md:text-sm text-gray-400">Enemies</div>
+                <div className="text-lg md:text-xl font-bold font-orbitron">
                   {levelData.enemyCount}
                 </div>
               </div>
             </div>
           </Card>
 
-          <Card className="p-4 bg-slate-900/80 border-purple-500/30">
-            <div className="flex items-center gap-2">
-              <Icon name="Zap" className="text-purple-500" />
+          <Card className="p-2 md:p-4 bg-slate-900/80 border-purple-500/30">
+            <div className="flex items-center gap-1 md:gap-2">
+              <Icon name="Zap" className="text-purple-500" size={16} />
               <div>
-                <div className="text-sm text-gray-400">Fire Rate</div>
-                <div className="text-xl font-bold font-orbitron">
+                <div className="text-xs md:text-sm text-gray-400">Fire Rate</div>
+                <div className="text-lg md:text-xl font-bold font-orbitron">
                   {selectedWeapon.fireRate}ms
                 </div>
               </div>
             </div>
           </Card>
 
-          <Card className="p-4 bg-slate-900/80 border-pink-500/30">
-            <div className="flex items-center gap-2">
-              <Icon name="Sword" className="text-pink-500" />
+          <Card className="p-2 md:p-4 bg-slate-900/80 border-pink-500/30">
+            <div className="flex items-center gap-1 md:gap-2">
+              <Icon name="Sword" className="text-pink-500" size={16} />
               <div>
-                <div className="text-sm text-gray-400">Damage</div>
-                <div className="text-xl font-bold font-orbitron">
+                <div className="text-xs md:text-sm text-gray-400">Damage</div>
+                <div className="text-lg md:text-xl font-bold font-orbitron">
                   {selectedWeapon.damage}
                 </div>
               </div>
@@ -227,7 +228,7 @@ const Index = () => {
   };
 
   const renderProfile = () => (
-    <div className="min-h-screen p-8 bg-[#0A0E27]">
+    <div className="min-h-screen p-4 md:p-8 bg-[#0A0E27]">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-4xl font-bold text-cyan-400 font-orbitron">
@@ -323,7 +324,7 @@ const Index = () => {
   );
 
   const renderShop = () => (
-    <div className="min-h-screen p-8 bg-[#0A0E27]">
+    <div className="min-h-screen p-4 md:p-8 bg-[#0A0E27]">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -443,8 +444,8 @@ const Index = () => {
   );
 
   const renderMultiplayer = () => (
-    <div className="min-h-screen p-8 flex items-center justify-center bg-[#0A0E27]">
-      <Card className="p-12 max-w-2xl bg-slate-900/80 border-2 border-purple-500/30">
+    <div className="min-h-screen p-4 md:p-8 flex items-center justify-center bg-[#0A0E27]">
+      <Card className="p-6 md:p-12 max-w-2xl w-full bg-slate-900/80 border-2 border-purple-500/30">
         <div className="text-center space-y-6">
           <Icon name="Wifi" className="mx-auto text-purple-500" size={64} />
           <h2 className="text-3xl font-bold text-purple-400 font-orbitron">
