@@ -14,6 +14,8 @@ export const GameCanvas = ({ level, weapon, onGameEnd, mode }: GameCanvasProps) 
   const [gameOver, setGameOver] = useState(false);
   const animationRef = useRef<number>();
   const audioContextRef = useRef<AudioContext | null>(null);
+  const lastFrameTimeRef = useRef<number>(0);
+  const fpsRef = useRef<number>(60);
   const gameStateRef = useRef({
     players: [] as Player[],
     playerBase: null as Base | null,
